@@ -1,0 +1,72 @@
+{
+  "method": "full_diffusionv5",
+  "architecture": "frozen_v3_cached_future_adapter_v1",
+  "controller": "automot_temporal_pid_v1",
+  "seed": 901,
+  "precision": "bf16",
+  "observation_interval_seconds": 0.25,
+  "backbone_directory": "ckps/full_diffusion/backbone/all_towns_seed1",
+  "data_root": "/share/home/u21012/data/bench2drive-PDMlite",
+  "source_index": "data/irwm_bev_t/pdm_seed901_dev44_dt05_tongji_v1",
+  "index_directory": "data/full_diffusionv5/pdm_seed901_4hz_v1",
+  "v3": {
+    "checkpoint": "ckps/full_diffusionv3/release/epoch_10.pt",
+    "sha256": "ea3eea848318c86cef17b9bc59a5a8c7fa17eed345123a5d359967a5323eb027"
+  },
+  "world": {
+    "checkpoint": "ckps/irwm_bev_t_large/release/best.pt",
+    "checkpoint_sha256": "b83eba4a33bb90031c43fea668087346a7e5a6af8aada53a8c5094f6f0703c2a",
+    "tuning": null
+  },
+  "schedule": {
+    "refresh_interval_seconds": 0.5,
+    "control_interval_seconds": 0.05,
+    "training_cache_ages_seconds": [0.0, 0.25, 0.5],
+    "max_prior_age_seconds": 0.5,
+    "max_cache_age_seconds": 0.5
+  },
+  "future_sampler": {
+    "points_per_map": [9, 9, 16, 25, 36],
+    "window_m": [6.0, 3.0],
+    "horizon_window_scale": [0.5, 0.625, 0.75, 0.875, 1.0]
+  },
+  "labels": {
+    "raw_measurement_interval_seconds": 0.25,
+    "temporal_interval_seconds": 0.5,
+    "temporal_points": 6,
+    "behavior_horizons_seconds": [1.0, 2.0, 3.0],
+    "behavior_classes": ["STOP", "DECELERATE", "KEEP", "ACCELERATE"],
+    "stop_speed_mps": 0.3,
+    "speed_change_mps": 0.5
+  },
+  "loss": {
+    "spatial_weight": 1.0,
+    "temporal_weight": 2.0,
+    "behavior_weight": 0.0,
+    "temporal_interval_weights": [3, 3, 2, 2, 1, 1],
+    "age_weights": [1.0, 1.0, 1.0]
+  },
+  "diffusion": {
+    "inference_steps": 25
+  },
+  "training": {
+    "epochs": 5,
+    "world_size": 8,
+    "batch_per_gpu": 32,
+    "workers_per_rank": 4,
+    "warmup_updates": 500,
+    "log_every": 20,
+    "checkpoint_every": 250,
+    "gradient_clip": 1.0,
+    "max_noise_fraction": 0.5,
+    "rolling_inference_steps": 25,
+    "weight_decay": 0.01,
+    "learning_rates": {
+      "new": 0.0001,
+      "gate": 0.001,
+      "distance": 0.01,
+      "world": 1e-06
+    },
+    "epoch_definition": "ceil(train_items/global_batch); one item = refresh frame + 0.25s + 0.5s frames of one 2Hz chain"
+  }
+}
